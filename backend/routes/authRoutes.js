@@ -66,7 +66,8 @@ router.post(
       res.status(201).json(newUser.rows[0]);
     } catch (err) {
       if (client) {
-        await client.query("ROLLBACK"); // Rollback Transaction on Error
+        await client.query("ROLLBACK"); 
+        console.error("❌ Register Error:", err);// Rollback Transaction on Error
       }
       res
         .status(500)
