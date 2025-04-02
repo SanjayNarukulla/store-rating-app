@@ -30,6 +30,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error("❌ CORS Error: Not allowed by CORS", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -51,16 +52,20 @@ app.use("/api/users", userRoutes);
 
 // ✅ Serve React Frontend in Production
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "client", "build")));
+  const buildPath = path.join(__dirname, "client", "build");
+  console.log("📂 Serving React from:", buildPath);
+
+  app.use(express.static(buildPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+    console.log("⚡ Serving index.html for:", req.url);
+    res.sendFile(path.join(buildPath, "index.html"));
   });
 }
 
 // ✅ Root Route (Health Check)
 app.get("/", (req, res) => {
-  res.json({ message: "API is running smoothly 🚀" });
+  res.json({ message: "✅ API is running smoothly 🚀" });
 });
 
 // ✅ Global Error Handler
