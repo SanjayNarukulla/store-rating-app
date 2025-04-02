@@ -12,20 +12,25 @@ const userRoutes = require("./routes/userRoutes");
 const app = express();
 
 // Middleware
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000", // Allow local development
-  // Add your deployed frontend URL here if it's different.
-];
+
 
 app.use(
   cors({
-    origin: allowedOrigins,
-    credentials: true, // Allow cookies and authentication headers
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Include OPTIONS
-    allowedHeaders: ["Content-Type", "Authorization"], // Add allowed headers
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:3000", // ✅ Allow local frontend
+        process.env.FRONTEND_URL, // ✅ Allow deployed frontend
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-
 app.use(express.json());
 app.use(morgan("dev"));
 
