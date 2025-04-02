@@ -4,39 +4,41 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    return token && role ? { role } : null;
+    const storedAuth = JSON.parse(localStorage.getItem("auth"));
+    return storedAuth
+      ? { role: storedAuth.role, token: storedAuth.token }
+      : null;
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-
-    if (token && role) {
-      setUser({ role });
+    const storedAuth = JSON.parse(localStorage.getItem("auth"));
+    if (storedAuth && storedAuth.token && storedAuth.role) {
+      setUser({ role: storedAuth.role, token: storedAuth.token });
     } else {
       setUser(null);
     }
   }, []);
 
   const login = (role, token) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    setUser({ role });
+    const authData = { role, token };
+    localStorage.setItem("auth", JSON.stringify(authData));
+    setUser(authData);
 
-    // ✅ Instead of useNavigate(), use window.location.href
-    if (role === "Admin") window.location.href = "/admin-dashboard";
-    else if (role === "User") window.location.href = "/user-dashboard";
-    else if (role === "Owner") window.location.href = "/store-owner-dashboard";
-    else window.location.href = "/";
+    // ✅ Full page refresh ensures role-based redirection
+    window.location.href =
+      role === "Admin"
+        ? "/admin-dashboard"
+        : role === "User"
+        ? "/user-dashboard"
+        : role === "Owner"
+        ? "/store-owner-dashboard"
+        : "/";
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    localStorage.removeItem("auth");
     setUser(null);
-    window.location.href = "/login"; // ✅ Ensures full page refresh
+    window.location.href = "/login"; // ✅ Ensures clean logout
   };
 
   return (

@@ -61,9 +61,8 @@ function UserList() {
           }
         );
         setUsers(response.data);
-        console.log(response.data);
       } catch (err) {
-        setError("Failed to fetch users.");
+        setError(`Failed to fetch users. Error: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -72,8 +71,8 @@ function UserList() {
   );
 
   useEffect(() => {
-    fetchUsers("");
-  }, []);
+    fetchUsers(""); // Fetch all users on mount
+  }, [fetchUsers]);
 
   // Handle search filter change
   const handleFilterChange = (e) => {
@@ -110,7 +109,13 @@ function UserList() {
         }}
       />
 
-      {loading && <CircularProgress />}
+      {loading && (
+        <div
+          style={{ display: "flex", justifyContent: "center", padding: "20px" }}
+        >
+          <CircularProgress />
+        </div>
+      )}
       {error && <Typography color="error">{error}</Typography>}
 
       {users.length > 0 ? (
@@ -141,7 +146,7 @@ function UserList() {
           </Table>
         </TableContainer>
       ) : (
-        <Typography>No users found.</Typography>
+        !loading && <Typography>No users found.</Typography>
       )}
     </Paper>
   );

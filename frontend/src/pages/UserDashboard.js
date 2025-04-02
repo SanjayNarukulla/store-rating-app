@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import {
   Paper,
@@ -67,21 +67,19 @@ function UserDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [ratings, setRatings] = useState({});
   const [userRatings, setUserRatings] = useState({});
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchStores();
-  }, []);
-
-  // Fetch all stores
-  const fetchStores = async () => {
+  // Memoizing fetchStores function using useCallback to avoid unnecessary re-renders
+  const fetchStores = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/stores`);
       setStores(response.data);
       fetchStoreRatings(response.data);
     } catch (error) {
       console.error("Error fetching stores:", error);
+      setError("Failed to fetch stores.");
     }
-  };
+  }, []); // No dependencies because it doesn't rely on external values
 
   // Fetch average ratings for each store
   const fetchStoreRatings = async (storeList) => {
@@ -96,6 +94,7 @@ function UserDashboard() {
       setRatings(ratingsData);
     } catch (error) {
       console.error("Error fetching store ratings:", error);
+      setError("Failed to fetch ratings.");
     }
   };
 
@@ -110,10 +109,14 @@ function UserDashboard() {
         }
       );
 
-      setUserRatings({ ...userRatings, [storeId]: rating });
-      fetchStores();
+      setUserRatings((prevRatings) => ({
+        ...prevRatings,
+        [storeId]: rating,
+      }));
+      fetchStores(); // Refresh stores after rating submission
     } catch (error) {
       console.error("Error submitting rating:", error);
+      setError("Failed to submit rating.");
     }
   };
 
@@ -123,6 +126,11 @@ function UserDashboard() {
       store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       store.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Fetch stores when component mounts
+  useEffect(() => {
+    fetchStores();
+  }, [fetchStores]);
 
   return (
     <StyledPaper>
@@ -138,6 +146,9 @@ function UserDashboard() {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
+
+      {/* Error Message */}
+      {error && <Typography color="error">{error}</Typography>}
 
       <Typography variant="h6" sx={{ marginBottom: "15px", color: "#1976D2" }}>
         Available Stores
