@@ -52,13 +52,26 @@ app.use("/api/users", userRoutes);
 
 // ✅ Serve React Frontend in Production
 if (process.env.NODE_ENV === "production") {
-  const buildPath = path.join(__dirname, "client", "build");
-  console.log("📂 Serving React from:", buildPath);
+  const buildPath = path.join(__dirname, "../frontend/build");
 
+  console.log("📂 Checking React build path:", buildPath);
+
+  // Check if the build folder exists
+  const fs = require("fs");
+  if (!fs.existsSync(path.join(buildPath, "index.html"))) {
+    console.error(
+      "❌ React build not found. Did you run `npm run build` in frontend?"
+    );
+  } else {
+    console.log("✅ React build found!");
+  }
+
+  // Serve the static files
   app.use(express.static(buildPath));
 
+  // Serve index.html for all frontend routes
   app.get("*", (req, res) => {
-    console.log("⚡ Serving index.html for:", req.url);
+    console.log("⚡ Serving React frontend:", req.url);
     res.sendFile(path.join(buildPath, "index.html"));
   });
 }
