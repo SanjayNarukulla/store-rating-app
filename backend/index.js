@@ -12,7 +12,7 @@ const userRoutes = require("./routes/userRoutes");
 const app = express();
 
 // Middleware
-const allowedOrigins = [process.env.FRONTEND_URL];
+const allowedOrigins = [process.env.FRONTEND_URL || "http://localhost:3000"];
 
 app.use(
   cors({
