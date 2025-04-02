@@ -14,7 +14,7 @@ yarn-error.log*
 .env.production
 
 # Production build
-/build
+
 
 # Testing
 /coverage

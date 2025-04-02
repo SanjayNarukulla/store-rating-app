@@ -82,30 +82,46 @@ function UserDashboard() {
   }, []); // No dependencies because it doesn't rely on external values
 
   // Fetch average ratings for each store
-  const fetchStoreRatings = async (storeList) => {
-    try {
-      const ratingsData = {};
-      for (let store of storeList) {
-        const response = await axios.get(`${API_BASE_URL}/ratings/${store.id}`);
-        ratingsData[store.id] = response.data.average_rating
-          ? response.data.average_rating.toFixed(1)
-          : "No Ratings Yet";
-      }
-      setRatings(ratingsData);
-    } catch (error) {
-      console.error("Error fetching store ratings:", error);
-      setError("Failed to fetch ratings.");
-    }
-  };
+ const fetchStoreRatings = async (storeList) => {
+   try {
+     const ratingsData = {};
+     for (let store of storeList) {
+       const response = await axios.get(`${API_BASE_URL}/ratings/${store.id}`);
+
+       // Ensure average_rating is a valid number
+       const avgRating = Number(response.data.average_rating);
+
+       ratingsData[store.id] = !isNaN(avgRating)
+         ? avgRating.toFixed(1)
+         : "No Ratings Yet";
+     }
+     setRatings(ratingsData);
+   } catch (error) {
+     console.error("Error fetching store ratings:", error);
+     setError("Failed to fetch ratings.");
+   }
+ };
+
 
   // Handle rating submission
   const handleRatingSubmit = async (storeId, rating) => {
     try {
+      // Retrieve token object from localStorage
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+
+      if (!storedAuth || !storedAuth.token) {
+        console.error("No valid token found.");
+        setError("Unauthorized: Token is missing.");
+        return;
+      }
+
+      const token = storedAuth.token; // Extract token
+
       await axios.post(
         `${API_BASE_URL}/ratings`,
         { store_id: storeId, rating },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -113,12 +129,15 @@ function UserDashboard() {
         ...prevRatings,
         [storeId]: rating,
       }));
+
       fetchStores(); // Refresh stores after rating submission
     } catch (error) {
       console.error("Error submitting rating:", error);
       setError("Failed to submit rating.");
     }
   };
+
+
 
   // Filter stores based on search input
   const filteredStores = stores.filter(

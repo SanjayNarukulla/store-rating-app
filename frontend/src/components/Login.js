@@ -31,7 +31,9 @@ function Login() {
     setError("");
 
     try {
-      const res = await axios.post(`${API_URL}/auth/login`, formData);
+      const res = await axios.post(`${API_URL}/auth/login`, formData, {
+        headers: { "Content-Type": "application/json" },
+      });
 
       if (!res.data.token || !res.data.user) {
         throw new Error("Invalid response from server");
@@ -40,19 +42,18 @@ function Login() {
       login(res.data.user.role, res.data.token);
 
       // ✅ Redirect based on role (handled in AuthContext)
-      navigate(
-        res.data.user.role === "Admin"
-          ? "/admin-dashboard"
-          : res.data.user.role === "User"
-          ? "/user-dashboard"
-          : res.data.user.role === "Owner"
-          ? "/store-owner-dashboard"
-          : "/"
-      );
+      const roleRedirects = {
+        Admin: "/admin-dashboard",
+        User: "/user-dashboard",
+        Owner: "/store-owner-dashboard",
+      };
+      navigate(roleRedirects[res.data.user.role] || "/");
     } catch (error) {
       console.error("Login Error:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Invalid email or password.");
-      
+      setError(
+        error.response?.data?.message ||
+          "Invalid email or password. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -77,6 +78,7 @@ function Login() {
             fullWidth
             margin="normal"
             onChange={handleChange}
+            value={formData.email}
             required
           />
           <TextField
@@ -86,6 +88,7 @@ function Login() {
             fullWidth
             margin="normal"
             onChange={handleChange}
+            value={formData.password}
             required
           />
           <Button

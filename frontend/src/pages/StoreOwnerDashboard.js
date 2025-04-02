@@ -55,11 +55,18 @@ function StoreOwnerDashboard() {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
+        const storedAuth = JSON.parse(localStorage.getItem("auth"));
+        const token = storedAuth?.token;
+
+        if (!token) {
+          throw new Error("No valid token found. Please log in again.");
+        }
+
         const response = await axios.get(
           `${API_URL}/ratings/owner/average-rating`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`,
               "Cache-Control": "no-cache",
               Pragma: "no-cache",
             },
@@ -69,12 +76,15 @@ function StoreOwnerDashboard() {
         console.log("API Response:", response.data);
 
         if (response.data) {
-          setAverageRating(parseFloat(response.data.average_rating));
+          setAverageRating(parseFloat(response.data.average_rating) || 0);
           setRatings(response.data.ratings || []);
         }
       } catch (error) {
         console.error("Error fetching ratings:", error);
-        setError("Failed to fetch ratings. Please try again later.");
+        setError(
+          error.response?.data?.message ||
+            "Failed to fetch ratings. Please try again later."
+        );
       } finally {
         setLoading(false);
       }
