@@ -7,18 +7,18 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log(
-      `🔒 ProtectedRoute: Checking access for ${user?.role || "Guest"}`
-    );
+    console.log(`🔒 ProtectedRoute: Checking access for`, user);
   }, [user]);
 
-  if (!user) {
-    console.warn(`🚫 No user found. Redirecting to login...`);
+  if (!user || !user.role) {
+    console.warn(`🚫 No valid user found. Redirecting to login...`);
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
-    console.warn(`🚫 Access Denied for ${user.role}. Redirecting...`);
+  if (!allowedRoles?.includes(user.role)) {
+    console.warn(
+      `🚫 Access Denied for ${user.role}. Redirecting to Unauthorized Page...`
+    );
     return <Navigate to="/unauthorized" replace />;
   }
 

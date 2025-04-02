@@ -59,7 +59,7 @@ function UserList() {
         if (!token) {
           throw new Error("No token found, please log in again.");
         }
-
+      
         const response = await axios.get(
           `${API_URL}/users?search=${searchTerm}`,
           {

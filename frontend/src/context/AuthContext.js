@@ -6,17 +6,15 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
- const [user, setUser] = useState(() => {
-   try {
-     const storedAuth = localStorage.getItem("auth");
-     console.log("📂 Retrieved from Local Storage:", storedAuth);
-     const parsedAuth = storedAuth ? JSON.parse(storedAuth) : null;
-     return parsedAuth?.token && parsedAuth?.role ? parsedAuth : null;
-   } catch (error) {
-     console.error("❌ Error parsing auth data:", error);
-     return null;
-   }
- });
+  const [user, setUser] = useState(() => {
+    try {
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      return storedAuth?.token && storedAuth?.role ? storedAuth : null;
+    } catch (error) {
+      console.error("❌ Error parsing auth data:", error);
+      return null;
+    }
+  });
 
   useEffect(() => {
     if (user?.token) {
