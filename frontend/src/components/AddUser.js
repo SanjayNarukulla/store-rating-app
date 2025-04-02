@@ -39,8 +39,10 @@ function AddUser() {
     setError("");
 
     try {
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      const token = storedAuth?.token;
       await axios.post(`${API_URL}/users`, data, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       alert("User added successfully!");
       reset(); // ✅ Clear form after success

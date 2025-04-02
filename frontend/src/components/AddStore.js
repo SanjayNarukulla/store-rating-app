@@ -30,11 +30,13 @@ function AddStore() {
     setError("");
 
     try {
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      const token = storedAuth?.token;
       await axios.post(`${API_URL}/stores`, data, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       alert("Store added successfully!");
-      reset(); // ✅ Clear form after success
+      reset(); // 
       navigate("/admin-dashboard");
     } catch (err) {
       console.error("Error:", err.response ? err.response.data : err.message);
