@@ -12,11 +12,14 @@ const ProtectedRoute = ({ allowedRoles }) => {
     );
   }, [user]);
 
-  if (!user || !allowedRoles.includes(user?.role)) {
-    console.warn(
-      `🚫 Access Denied for ${user?.role || "Guest"}. Redirecting...`
-    );
-    return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) {
+    console.warn(`🚫 No user found. Redirecting to login...`);
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    console.warn(`🚫 Access Denied for ${user.role}. Redirecting...`);
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <Outlet />;

@@ -52,16 +52,27 @@ function UserList() {
       setLoading(true);
       setError("");
       try {
+        const storedAuth = JSON.parse(localStorage.getItem("auth"));
+        const token = storedAuth?.token;
+        console.log("🔑 Token Sent:", token); // Debugging token
+
+        if (!token) {
+          throw new Error("No token found, please log in again.");
+        }
+
         const response = await axios.get(
           `${API_URL}/users?search=${searchTerm}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
+
+        console.log("✅ Users Response:", response.data);
         setUsers(response.data);
       } catch (err) {
+        console.error("⚠️ Fetch Error:", err.response?.data || err);
         setError(`Failed to fetch users. Error: ${err.message}`);
       } finally {
         setLoading(false);

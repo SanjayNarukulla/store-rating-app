@@ -52,6 +52,7 @@ function Login() {
     } catch (error) {
       console.error("Login Error:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Invalid email or password.");
+      
     } finally {
       setLoading(false);
     }

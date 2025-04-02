@@ -24,16 +24,26 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        console.log(API_URL)
+        const storedAuth = JSON.parse(localStorage.getItem("auth"));
+        const token = storedAuth?.token; // Extract token correctly
+        console.log("🔑 Token Sent:", token); // Debugging token
+
+        if (!token) {
+          throw new Error("No token found, please log in again.");
+        }
+
         const response = await axios.get(`${API_URL}/stats`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
+
+        console.log("✅ Stats Response:", response.data);
         setStats({
           users: response.data.totalUsers,
           stores: response.data.totalStores,
           ratings: response.data.totalRatings,
         });
       } catch (err) {
+        console.error("⚠️ Fetch Error:", err.response?.data || err);
         setError("⚠️ Failed to fetch statistics. Please try again.");
       } finally {
         setLoading(false);
@@ -41,7 +51,7 @@ function AdminDashboard() {
     };
     fetchStats();
   }, []);
-  console.log("API URL:", process.env.REACT_APP_API_URL);
+
 
   return (
     <Paper sx={{ padding: 4, maxWidth: 1100, margin: "auto", mt: 3 }}>
