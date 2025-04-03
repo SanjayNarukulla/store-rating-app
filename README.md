@@ -26,6 +26,7 @@ This project is a **MERN stack-like** application designed to facilitate user re
 
 ##   📂 Project Structure
 
+```
 📦 project-root
 ├── 📂 backend
 │   ├── 📂 routes
@@ -46,6 +47,7 @@ This project is a **MERN stack-like** application designed to facilitate user re
 │   ├── .env
 ├── README.md
 └── package.json
+```
 
 
 ##   🔧 Installation & Setup
