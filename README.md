@@ -235,9 +235,6 @@ This project relies on a PostgreSQL database. Follow these instructions to set u
     * `Request Body:` `{ name, email, address }`
     * `Response:` Created store object or error message.
 
-
-
-
 #### 🔹 Rating Routes
 
 * **POST /api/ratings:** Create or update a user's rating for a store.
@@ -282,6 +279,77 @@ This project relies on a PostgreSQL database. Follow these instructions to set u
             ```
         * `401 (Unauthorized)`: User not authenticated.
         * `404 (Not Found)`: Store not found.
+        * `500 (Internal Server Error)`: Server error.
+          
+#### 🔹 User Routes
+
+* **GET /api/users:** Retrieve a list of all users (Admin only).
+    * `Query Parameters:` `role` (optional): Filter users by role.
+    * `Response:`
+        * `200 (OK)`: Array of user objects (excluding passwords).
+            ```json
+            [
+                {
+                    "id": number,
+                    "name": string,
+                    "email": string,
+                    "address": string,
+                    "role": string
+                },
+                // ... more users
+            ]
+            ```
+        * `401 (Unauthorized)`: User not authenticated.
+        * `403 (Forbidden)`: User is not an admin.
+        * `500 (Internal Server Error)`: Server error.
+
+* **GET /api/users/:id:** Retrieve user details by ID (Admin only).
+    * `Response:`
+        * `200 (OK)`: User object (excluding password). If the user is an "Owner," it includes store ratings.
+            ```json
+            {
+                "id": number,
+                "name": string,
+                "email": string,
+                "role": string,
+                "ratings": array | null // Only for 'Owner' role
+            }
+            ```
+        * `401 (Unauthorized)`: User not authenticated.
+        * `403 (Forbidden)`: User is not an admin.
+        * `404 (Not Found)`: User not found.
+        * `500 (Internal Server Error)`: Server error.
+
+* **POST /api/users:** Create a new user (Admin only).
+    * `Request Body:`
+        ```json
+        {
+            "name": string,
+            "email": string,
+            "password": string,
+            "role": "Admin" | "User" | "Owner",
+            "address": string
+        }
+        ```
+    * `Response:`
+        * `201 (Created)`: Created user object (excluding password).
+            ```json
+            {
+                "id": number,
+                "name": string,
+                "email": string,
+                "role": string,
+                "address": string
+            }
+            ```
+        * `400 (Bad Request)`: Validation errors or user already exists.
+            ```json
+            {
+                "errors": [ /* validation errors */ ]
+            }
+            ```
+        * `401 (Unauthorized)`: User not authenticated.
+        * `403 (Forbidden)`: User is not an admin.
         * `500 (Internal Server Error)`: Server error.
 
 #### 🔹 Stats Routes
