@@ -35,7 +35,7 @@ This project is a **MERN stack-like** application designed to facilitate user re
 │   │   ├── ratingRoutes.js
 │   │   ├── statsRoutes.js
 │   │   ├── userRoutes.js
-│   ├── server.js
+│   ├── index.js
 │   ├── config.env
 ├── 📂 frontend
 │   ├── 📂 src
