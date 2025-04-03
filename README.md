@@ -234,13 +234,7 @@ This project relies on a PostgreSQL database. Follow these instructions to set u
 * **POST /api/stores:** Create a new store (requires Owner role).
     * `Request Body:` `{ name, email, address }`
     * `Response:` Created store object or error message.
-* **GET /api/stores/:id:** Get a specific store by ID.
-    * `Response:` Store object.
-* **PUT /api/stores/:id:** Update an existing store (requires Owner role).
-    * `Request Body:` `{ name, email, address }` (fields to update).
-    * `Response:` Updated store object or error message.
-* **DELETE /api/stores/:id:** Delete a store (requires Owner role).
-    * `Response:` Success message or error message.
+
 
 #### 🔹 Rating Routes
 
