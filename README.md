@@ -236,13 +236,53 @@ This project relies on a PostgreSQL database. Follow these instructions to set u
     * `Response:` Created store object or error message.
 
 
+
+
 #### 🔹 Rating Routes
 
 * **POST /api/ratings:** Create or update a user's rating for a store.
-    * `Request Body:` `{ user_id, store_id, rating }`
-    * `Response:` Created/updated rating object or error message.
-* **GET /api/ratings/:storeId:** Retrieve all ratings for a specific store.
-    * `Response:` Array of rating objects or average rating.
+    * `Request Body:` `{ store_id: number, rating: number }`
+    * `Response:`
+        * `201 (Created)`:
+            ```json
+            {
+                "message": "Rating added" | "Rating updated",
+                "rating": { /* rating object */ },
+                "average_rating": number | null
+            }
+            ```
+        * `400 (Bad Request)`:
+            ```json
+            {
+                "errors": [ /* validation errors */ ]
+            }
+            ```
+        * `401 (Unauthorized)`: User not authenticated.
+        * `404 (Not Found)`: Store not found.
+        * `500 (Internal Server Error)`: Server error.
+
+* **GET /api/ratings/:storeId:** Retrieve the average rating for a specific store.
+    * `Response:`
+        * `200 (OK)`:
+            ```json
+            {
+                "average_rating": number | 0
+            }
+            ```
+        * `404 (Not Found)`: Store not found.
+        * `500 (Internal Server Error)`: Server error.
+* **GET /api/ratings/owner/average-rating:** Retrieves the average ratings and user ratings for a store that is owned by the current user.
+    * `Response:`
+        * `200 (OK)`:
+            ```json
+            {
+                "average_rating": number,
+                "ratings": [{rating:number, user_name:string}]
+            }
+            ```
+        * `401 (Unauthorized)`: User not authenticated.
+        * `404 (Not Found)`: Store not found.
+        * `500 (Internal Server Error)`: Server error.
 
 #### 🔹 Stats Routes
 
