@@ -7,10 +7,6 @@ import {
   Button,
   Typography,
   Paper,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
 
 // ✅ Get API URL from environment variables
@@ -85,14 +81,6 @@ function Register() {
             onChange={handleChange}
             required
           />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Role</InputLabel>
-            <Select name="role" value={formData.role} onChange={handleChange}>
-              <MenuItem value="User">User</MenuItem>
-              <MenuItem value="Owner">Owner</MenuItem>
-              <MenuItem value="Admin">Admin</MenuItem>
-            </Select>
-          </FormControl>
           <Button
             type="submit"
             variant="contained"

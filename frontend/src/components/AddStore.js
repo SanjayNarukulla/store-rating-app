@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import {
@@ -7,10 +7,14 @@ import {
   Typography,
   Paper,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Get API URL from environment variables
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 function AddStore() {
@@ -19,11 +23,36 @@ function AddStore() {
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
+    control, // Import control for Select component
   } = useForm();
 
-  const [loading, setLoading] = useState(false); // ✅ Loading state
-  const [error, setError] = useState(""); // ✅ Error state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [ownerOptions, setOwnerOptions] = useState([]);
+  const [fetchOwnersError, setFetchOwnersError] = useState("");
+
+  useEffect(() => {
+    const fetchOwners = async () => {
+      try {
+        setFetchOwnersError("");
+        const storedAuth = JSON.parse(localStorage.getItem("auth"));
+        const token = storedAuth?.token;
+        const response = await axios.get(`${API_URL}/users?role=Owner`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setOwnerOptions(
+          response.data.map((owner) => ({ id: owner.id, name: owner.name }))
+        );
+      } catch (err) {
+        console.error("Error fetching owners:", err);
+        setFetchOwnersError("Failed to load valid Owner IDs.");
+      }
+    };
+
+    fetchOwners();
+  }, []);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -36,7 +65,7 @@ function AddStore() {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Store added successfully!");
-      reset(); // 
+      reset();
       navigate("/admin-dashboard");
     } catch (err) {
       console.error("Error:", err.response ? err.response.data : err.message);
@@ -95,21 +124,45 @@ function AddStore() {
           margin="normal"
         />
 
-        {/* Owner ID */}
-        <TextField
-          label="Owner ID"
+        {/* Owner ID as Dropdown */}
+        <FormControl
           fullWidth
-          {...register("owner_id", {
-            required: "Owner ID is required",
-            pattern: {
-              value: /^[0-9]+$/,
-              message: "Owner ID must be a number",
-            },
-          })}
-          error={!!errors.owner_id}
-          helperText={errors.owner_id?.message}
           margin="normal"
-        />
+          error={!!errors.owner_id || !!fetchOwnersError}
+        >
+          <InputLabel id="owner-id-label">Owner</InputLabel>
+          <Select
+            labelId="owner-id-label"
+            id="owner_id"
+            {...register("owner_id", { required: "Owner is required" })}
+            label="Owner"
+          >
+            {ownerOptions.map((owner) => (
+              <MenuItem key={owner.id} value={owner.id}>
+                {owner.name} (ID: {owner.id})
+              </MenuItem>
+            ))}
+          </Select>
+          {errors.owner_id && (
+            <FormHelperText>{errors.owner_id.message}</FormHelperText>
+          )}
+          {fetchOwnersError && (
+            <FormHelperText error>{fetchOwnersError}</FormHelperText>
+          )}
+          {!ownerOptions.length && !fetchOwnersError && (
+            <FormHelperText>Loading available owners...</FormHelperText>
+          )}
+          {!ownerOptions.length && fetchOwnersError && (
+            <FormHelperText error>
+              Could not load owners. Please try again.
+            </FormHelperText>
+          )}
+          {ownerOptions.length === 0 &&
+            !errors.owner_id &&
+            !fetchOwnersError && (
+              <FormHelperText>No owners available to assign.</FormHelperText>
+            )}
+        </FormControl>
 
         {/* Submit Button */}
         <Button
@@ -118,7 +171,7 @@ function AddStore() {
           color="primary"
           fullWidth
           sx={{ mt: 2 }}
-          disabled={loading}
+          disabled={loading || ownerOptions.length === 0}
         >
           {loading ? (
             <CircularProgress size={24} sx={{ color: "white" }} />
@@ -126,6 +179,16 @@ function AddStore() {
             "Add Store"
           )}
         </Button>
+        {ownerOptions.length === 0 && !fetchOwnersError && (
+          <Typography
+            variant="caption"
+            color="error"
+            display="block"
+            sx={{ mt: 1 }}
+          >
+            No owners available. You need to create an 'Owner' user first.
+          </Typography>
+        )}
       </form>
     </Paper>
   );

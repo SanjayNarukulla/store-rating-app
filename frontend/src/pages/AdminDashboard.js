@@ -26,7 +26,7 @@ function AdminDashboard() {
       try {
         const storedAuth = JSON.parse(localStorage.getItem("auth"));
         const token = storedAuth?.token; // Extract token correctly
-        console.log("🔑 Token Sent:", token); // Debugging token
+         // Debugging token
 
         if (!token) {
           throw new Error("No token found, please log in again.");
@@ -36,7 +36,7 @@ function AdminDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log("✅ Stats Response:", response.data);
+        
         setStats({
           users: response.data.totalUsers,
           stores: response.data.totalStores,

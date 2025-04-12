@@ -13,7 +13,6 @@ import {
   Paper,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import debounce from "lodash.debounce";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -39,46 +38,55 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 const StoreList = () => {
-  const [stores, setStores] = useState([]);
+  const [allStores, setAllStores] = useState([]);
+  const [filteredStores, setFilteredStores] = useState([]);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchStores = useCallback(
-    debounce(async (searchTerm) => {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await axios.get(
-          `${API_URL}/stores?search=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setStores(response.data);
-      } catch (err) {
-        setError("Error fetching stores. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    }, 500),
-    []
-  );
+  const fetchStores = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await axios.get(`${API_URL}/stores`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setAllStores(response.data);
+    } catch (err) {
+      setError("Error fetching stores. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchStores(""); // Fetch stores on mount
+    fetchStores(); // Fetch all stores on mount
   }, [fetchStores]);
 
+  useEffect(() => {
+    const applyFilters = () => {
+      let filtered = [...allStores];
+
+      if (filter.trim() !== "") {
+        filtered = filtered.filter(
+          (store) =>
+            store.name.toLowerCase().includes(filter.toLowerCase()) ||
+            store.email.toLowerCase().includes(filter.toLowerCase()) ||
+            (store.address &&
+              store.address.toLowerCase().includes(filter.toLowerCase()))
+        );
+      }
+
+      setFilteredStores(filtered);
+    };
+
+    applyFilters();
+  }, [allStores, filter]);
+
   const handleFilterChange = (e) => {
-    const value = e.target.value;
-    setFilter(value);
-    if (value.trim()) {
-      fetchStores(value);
-    } else {
-      setStores([]); // Optionally reset the list when search is cleared
-    }
+    setFilter(e.target.value);
   };
 
   return (
@@ -99,7 +107,7 @@ const StoreList = () => {
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
 
-      {stores.length > 0 ? (
+      {filteredStores.length > 0 ? (
         <TableContainer component={Paper} sx={{ marginTop: 2 }}>
           <Table>
             <StyledTableHead>
@@ -112,7 +120,7 @@ const StoreList = () => {
               </TableRow>
             </StyledTableHead>
             <TableBody>
-              {stores.map((store) => (
+              {filteredStores.map((store) => (
                 <StyledTableRow key={store.id}>
                   <TableCell sx={{ fontWeight: "bold" }}>{store.id}</TableCell>
                   <TableCell>{store.name}</TableCell>
@@ -125,7 +133,7 @@ const StoreList = () => {
           </Table>
         </TableContainer>
       ) : (
-        <Typography>No stores found.</Typography>
+        !loading && <Typography>No stores found.</Typography>
       )}
     </Paper>
   );

@@ -41,6 +41,7 @@ function AddUser() {
     try {
       const storedAuth = JSON.parse(localStorage.getItem("auth"));
       const token = storedAuth?.token;
+      console.log(token)
       await axios.post(`${API_URL}/users`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });

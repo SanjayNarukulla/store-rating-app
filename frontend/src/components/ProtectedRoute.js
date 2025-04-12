@@ -7,7 +7,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log(`🔒 ProtectedRoute: Checking access for`, user);
+    
   }, [user]);
 
   if (!user || !user.role) {

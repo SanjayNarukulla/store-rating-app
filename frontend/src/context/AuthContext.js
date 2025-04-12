@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       const authData = { role, token };
       localStorage.setItem("auth", JSON.stringify(authData));
       setUser(authData);
-      console.log("✅ Auth Data Stored:", localStorage.getItem("auth"));
+  
       // Wait for the state update before navigating
       await new Promise((resolve) => setTimeout(resolve, 100));
 

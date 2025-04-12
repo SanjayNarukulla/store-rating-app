@@ -8,7 +8,7 @@ const router = express.Router();
 
 /**
  * @route   GET /api/users
- * @desc    Get all users (Admin Only, with optional role filtering)
+ * @desc    Get all users (Admin Only, with optional search and role filtering)
  * @access  Private (Admin)
  */
 router.get("/", authenticateUser, async (req, res) => {
@@ -17,17 +17,29 @@ router.get("/", authenticateUser, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { role } = req.query;
-    let query = "SELECT id, name, email, address,role FROM users";
+    const { search = "", role = "" } = req.query;
+    let query = "SELECT id, name, email, address, role FROM users";
     const values = [];
+    const conditions = [];
 
-    if (role) {
-      query += " WHERE role = $1";
-      values.push(role);
+    if (search.trim() !== "") {
+      values.push(`%${search}%`);
+      conditions.push(
+        `(LOWER(name) LIKE $${values.length} OR LOWER(email) LIKE $${values.length})`
+      );
     }
 
-    const users = await pool.query(query, values);
-    res.json(users.rows);
+    if (role.trim() !== "") {
+      values.push(role);
+      conditions.push(`role = $${values.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    const result = await pool.query(query, values);
+    res.json(result.rows);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: error.message });
@@ -36,7 +48,7 @@ router.get("/", authenticateUser, async (req, res) => {
 
 /**
  * @route   GET /api/users/:id
- * @desc    Get user details (including store ratings if store owner)
+ * @desc    Get user details (Admin only, includes store ratings if Owner)
  * @access  Private (Admin)
  */
 router.get("/:id", authenticateUser, async (req, res) => {
@@ -56,7 +68,7 @@ router.get("/:id", authenticateUser, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let userData = user.rows[0];
+    const userData = user.rows[0];
 
     if (userData.role === "Owner") {
       const store = await pool.query(
@@ -94,7 +106,7 @@ router.post(
       }
       return true;
     }),
-    body("address").notEmpty().withMessage("Address is required"), // ✅ Added address validation
+    body("address").notEmpty().withMessage("Address is required"),
   ],
   async (req, res) => {
     if (req.user.role !== "Admin") {
@@ -107,9 +119,7 @@ router.post(
     }
 
     try {
-      const { name, email, password, role, address } = req.body; // ✅ Include address
-
-      console.log("Received request body:", req.body);
+      const { name, email, password, role, address } = req.body;
 
       const userExists = await pool.query(
         "SELECT id FROM users WHERE email = $1",
@@ -119,12 +129,11 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // Hash password before storing
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const newUser = await pool.query(
         "INSERT INTO users (name, email, password, role, address) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, address",
-        [name, email, hashedPassword, role, address] // ✅ Store address
+        [name, email, hashedPassword, role, address]
       );
 
       res.status(201).json(newUser.rows[0]);

@@ -18,10 +18,13 @@ router.post(
   "/",
   authenticateUser,
   [
-    body("name").notEmpty(),
-    body("address").notEmpty(),
-    body("email").isEmail().optional({ nullable: true }), // Email is optional now
-    body("owner_id").isInt(), // Owner ID is now required
+    body("name").notEmpty().withMessage("Name is required"),
+    body("address").notEmpty().withMessage("Address is required"),
+    body("email")
+      .isEmail()
+      .optional({ nullable: true })
+      .withMessage("Invalid email format"),
+    body("owner_id").isInt().withMessage("Owner ID must be an integer"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -36,11 +39,22 @@ router.post(
 
       const { name, email, address, owner_id } = req.body;
 
-      const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [
-        owner_id,
-      ]);
+      // Check if the provided owner_id exists in the users table and has the role 'Owner'
+      const userCheck = await pool.query(
+        "SELECT id, role FROM users WHERE id = $1",
+        [owner_id]
+      );
+
       if (userCheck.rows.length === 0) {
         return res.status(400).json({ message: "Owner id does not exist" });
+      }
+
+      if (userCheck.rows[0].role.toLowerCase() !== "owner") {
+        return res
+          .status(400)
+          .json({
+            message: "Provided owner id does not belong to an 'Owner' user",
+          });
       }
 
       const newStore = await pool.query(
@@ -50,9 +64,9 @@ router.post(
 
       res.status(201).json(newStore.rows[0]);
     } catch (error) {
+      console.error("Error creating store:", error);
       res.status(500).json({ message: error.message });
     }
   }
 );
-
 module.exports = router;
