@@ -1,3 +1,7 @@
+credentials for Admin;
+narukullasanjay@gmail.com
+sanjay123
+
 #   Store Rating and Management System
 
 ##   📖 Overview
