@@ -180,7 +180,7 @@ function UserList() {
           <Table>
             <StyledTableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                
                 <TableCell>Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Address</TableCell>
@@ -191,7 +191,7 @@ function UserList() {
             <TableBody>
               {filteredUsers.map((user) => (
                 <StyledTableRow key={user.id}>
-                  <TableCell sx={{ fontWeight: "bold" }}>{user.id}</TableCell>
+                 
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.address || "N/A"}</TableCell>

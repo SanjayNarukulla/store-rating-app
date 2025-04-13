@@ -114,7 +114,6 @@ const StoreList = () => {
           <Table>
             <StyledTableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Address</TableCell>
@@ -125,7 +124,7 @@ const StoreList = () => {
             <TableBody>
               {filteredStores.map((store) => (
                 <StyledTableRow key={store.id}>
-                  <TableCell sx={{ fontWeight: "bold" }}>{store.id}</TableCell>
+                  
                   <TableCell>{store.name}</TableCell>
                   <TableCell>{store.email}</TableCell>
                   <TableCell>{store.address || "N/A"}</TableCell>
