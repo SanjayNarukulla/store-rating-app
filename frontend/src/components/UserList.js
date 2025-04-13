@@ -185,6 +185,7 @@ function UserList() {
                 <TableCell>Email</TableCell>
                 <TableCell>Address</TableCell>
                 <TableCell>Role</TableCell>
+                <TableCell>Store Rating</TableCell>
               </TableRow>
             </StyledTableHead>
             <TableBody>
@@ -196,6 +197,11 @@ function UserList() {
                   <TableCell>{user.address || "N/A"}</TableCell>
                   <TableCell sx={getRoleColor(user.role)}>
                     {user.role}
+                  </TableCell>
+                  <TableCell>
+                    {user.role === "Owner" && user.average_store_rating !== null
+                      ? user.average_store_rating
+                      : "N/A"}
                   </TableCell>
                 </StyledTableRow>
               ))}

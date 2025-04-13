@@ -11,56 +11,135 @@ import {
   Select,
   MenuItem,
   Box,
+  Button, // Import Button for password update
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL; // Load API URL from .env
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
-// Styled container
-const StyledPaper = styled(Paper)({
-  padding: "25px",
-  marginTop: "20px",
-  backgroundColor: "#ffffff",
-  borderRadius: "10px",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-});
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginTop: theme.spacing(3),
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[2],
+  maxWidth: 800, // Adjust max width for better layout
+  margin: "20px auto", // Center the paper
+}));
 
-// Styled search input
-const SearchBar = styled(TextField)({
+const DashboardHeader = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontWeight: theme.typography.fontWeightBold,
+  marginBottom: theme.spacing(3),
+  textAlign: "center", // Center the header
+}));
+
+const PasswordUpdateContainer = styled(Box)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "flex-end", // Align to the right
+  marginBottom: theme.spacing(2),
+}));
+
+const PasswordUpdateButton = styled(Button)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  border: "none", // Remove the border
+  "&:hover": {
+    backgroundColor: theme.palette.primary.dark,
+  },
+}));
+
+const PasswordInputContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  padding: theme.spacing(2),
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  display: "flex",
+  flexDirection: "column",
+  gap: theme.spacing(1.5),
+  alignItems: "flex-start", // Align items to the start by default
+}));
+
+const PasswordSubmitButton = styled(Button)(({ theme }) => ({
+  backgroundColor: theme.palette.secondary.main,
+  color: theme.palette.secondary.contrastText,
+  border: "none", // Remove the border
+  "&:hover": {
+    backgroundColor: theme.palette.secondary.dark,
+  },
+}));
+
+const SearchBar = styled(TextField)(({ theme }) => ({
   width: "100%",
-  marginBottom: "20px",
-});
+  marginBottom: theme.spacing(3),
+}));
 
-// Styled list
-const StyledList = styled(List)({
-  backgroundColor: "#F8F9FA",
-  borderRadius: "10px",
-  padding: "15px",
-});
+// Container for the list of stores, with a light blue background and padding
+const StoreListContainer = styled(List)(({ theme }) => ({
+  backgroundColor: '#e0f7fa', // Light blue background color
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(2), // Added more padding for spacing
+  maxHeight: '80vh', // Optional: If you want the list to be scrollable
+  overflowY: 'auto', // Optional: Makes the container scrollable if content exceeds height
+}));
 
-// Styled list items with hover effect
-const StyledListItem = styled(ListItem)({
+// Style for each store item in the list
+const StoreListItem = styled(ListItem)(({ theme }) => ({
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  backgroundColor: "#E3F2FD",
-  marginBottom: "12px",
-  borderRadius: "10px",
-  padding: "15px",
-  transition: "0.3s",
+  backgroundColor: theme.palette.background.paper,
+  marginBottom: theme.spacing(1.5),
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(2),
+  boxShadow: theme.shadows[2],
+  transition: theme.transitions.create(["background-color", "transform"], {
+    duration: theme.transitions.duration.short,
+  }),
   "&:hover": {
-    backgroundColor: "#BBDEFB",
-    transform: "scale(1.02)",
+    backgroundColor: theme.palette.info.main,
+    transform: "scale(1.02)", // Slightly increase the scale for hover effect
   },
-});
+}));
 
-// Styled rating select dropdown
-const StyledSelect = styled(Select)({
-  backgroundColor: "white",
-  borderRadius: "5px",
-  padding: "5px",
-  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
-});
+// Style for the store information text (name and address)
+const StoreInfo = styled(ListItemText)(({ theme }) => ({
+  "& .MuiTypography-primary": {
+    fontWeight: theme.typography.fontWeightBold,
+    color: theme.palette.text.primary,
+  },
+  "& .MuiTypography-secondary": {
+    color: theme.palette.text.secondary,
+  },
+}));
+
+// Rating box style (aligning the rating text and dropdown)
+const RatingBox = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(2), // Increased gap for better spacing
+}));
+
+// Rating text style for the star rating
+const RatingText = styled(Typography)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightBold,
+  color: theme.palette.warning.dark,
+}));
+
+// Custom styled select dropdown for ratings
+const RatingSelect = styled(Select)(({ theme }) => ({
+  backgroundColor: theme.palette.background.default,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[1],
+  padding: theme.spacing(1),
+  minWidth: 120,
+}));
+
+// Optional: Custom styling for the MenuItem inside the RatingSelect component
+const MenuItemStyled = styled(MenuItem)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightRegular,
+  color: theme.palette.text.primary,
+}));
 
 function UserDashboard() {
   const [stores, setStores] = useState([]);
@@ -69,95 +148,197 @@ function UserDashboard() {
   const [userRatings, setUserRatings] = useState({});
   const [error, setError] = useState("");
 
-  // Memoizing fetchStores function using useCallback to avoid unnecessary re-renders
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [showPasswordInputs, setShowPasswordInputs] = useState(false);
+
+  // 👇 move this ABOVE fetchStores
+  const fetchStoreRatings = useCallback(async (storeList) => {
+    try {
+      const ratingsData = {};
+      for (let store of storeList) {
+        const response = await axios.get(`${API_BASE_URL}/ratings/${store.id}`);
+        const avgRating = Number(response.data.average_rating);
+        ratingsData[store.id] = !isNaN(avgRating)
+          ? avgRating.toFixed(1)
+          : "No Ratings Yet";
+      }
+      setRatings(ratingsData);
+      console.log("Fetched Store Ratings:", ratingsData);
+    } catch (error) {
+      console.error("Error fetching store ratings:", error);
+      setError("Failed to fetch ratings.");
+    }
+  }, []);
+
+  // 👇 now declare this — it will no longer error
   const fetchStores = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/stores`);
       setStores(response.data);
       fetchStoreRatings(response.data);
+      fetchUserRatings(response.data);
     } catch (error) {
       console.error("Error fetching stores:", error);
       setError("Failed to fetch stores.");
     }
-  }, []); // No dependencies because it doesn't rely on external values
+  }, [fetchStoreRatings]);
 
-  // Fetch average ratings for each store
- const fetchStoreRatings = async (storeList) => {
-   try {
-     const ratingsData = {};
-     for (let store of storeList) {
-       const response = await axios.get(`${API_BASE_URL}/ratings/${store.id}`);
+  const fetchUserRatings = useCallback(async () => {
+    try {
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      if (!storedAuth || !storedAuth.token) {
+        console.log("User not authenticated, skipping user ratings fetch.");
+        return;
+      }
+      const token = storedAuth.token;
+      const response = await axios.get(`${API_BASE_URL}/ratings/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Raw user ratings data:", response.data);
 
-       // Ensure average_rating is a valid number
-       const avgRating = Number(response.data.average_rating);
+      // Check if the data is an object and convert it into an array of objects
+      if (
+        response.data &&
+        typeof response.data === "object" &&
+        !Array.isArray(response.data)
+      ) {
+        const ratingsArray = Object.entries(response.data).map(
+          ([store_id, rating]) => ({
+            store_id: parseInt(store_id), // Ensure store_id is a number
+            rating,
+          })
+        );
 
-       ratingsData[store.id] = !isNaN(avgRating)
-         ? avgRating.toFixed(1)
-         : "No Ratings Yet";
-     }
-     setRatings(ratingsData);
-   } catch (error) {
-     console.error("Error fetching store ratings:", error);
-     setError("Failed to fetch ratings.");
-   }
- };
+        // Now ratingsArray will be in the expected format
+        const ratingsMap = {};
+        ratingsArray.forEach((ratingObj) => {
+          ratingsMap[ratingObj.store_id] = ratingObj.rating;
+        });
 
+        setUserRatings(ratingsMap);
+        console.log("Fetched User Ratings:", ratingsMap);
+      } else {
+        console.log("Unexpected response format:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching all user ratings:", error);
+    }
+  }, []);
 
-  // Handle rating submission
   const handleRatingSubmit = async (storeId, rating) => {
     try {
-      // Retrieve token object from localStorage
       const storedAuth = JSON.parse(localStorage.getItem("auth"));
-
       if (!storedAuth || !storedAuth.token) {
-        console.error("No valid token found.");
         setError("Unauthorized: Token is missing.");
         return;
       }
-
-      const token = storedAuth.token; // Extract token
-
+      const token = storedAuth.token;
       await axios.post(
         `${API_BASE_URL}/ratings`,
         { store_id: storeId, rating },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setUserRatings((prevRatings) => ({
-        ...prevRatings,
-        [storeId]: rating,
-      }));
-
-      fetchStores(); // Refresh stores after rating submission
+      setUserRatings((prev) => ({ ...prev, [storeId]: rating }));
+      console.log("Submitted Rating:", { storeId, rating });
+      fetchStores(); // Re-fetch to update UI
     } catch (error) {
       console.error("Error submitting rating:", error);
       setError("Failed to submit rating.");
     }
   };
 
+  const handlePasswordUpdate = async () => {
+    try {
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      if (!storedAuth || !storedAuth.token) {
+        setPasswordMessage("Unauthorized: Token missing.");
+        return;
+      }
+      const token = storedAuth.token;
+      await axios.put(
+        `${API_BASE_URL}/users/update-password`,
+        { oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
+      console.log(oldPassword);
+      console.log(newPassword);
+      setPasswordMessage("Password updated successfully!");
+      setOldPassword("");
+      setNewPassword("");
+      setShowPasswordInputs(false); // Hide password inputs after successful update
+    } catch (error) {
+      console.error("Password update failed:", error);
+      setPasswordMessage(
+        error.response?.data?.message || "Failed to update password."
+      );
+    }
+  };
 
-  // Filter stores based on search input
   const filteredStores = stores.filter(
     (store) =>
       store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       store.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Fetch stores when component mounts
   useEffect(() => {
     fetchStores();
   }, [fetchStores]);
 
   return (
     <StyledPaper>
-      <Typography variant="h5" sx={{ color: "#1976D2", fontWeight: "bold" }}>
-        User Dashboard
-      </Typography>
+      <DashboardHeader variant="h5">User Dashboard</DashboardHeader>
 
-      {/* Search Bar */}
+      <PasswordUpdateContainer>
+        {!showPasswordInputs ? (
+          <PasswordUpdateButton
+            onClick={() => setShowPasswordInputs(true)}
+            variant="contained"
+            size="small"
+          >
+            Update Password
+          </PasswordUpdateButton>
+        ) : (
+          <PasswordInputContainer>
+            <TextField
+              label="Current Password"
+              type="password"
+              fullWidth
+              size="small"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              sx={{ mb: 1 }}
+            />
+            <TextField
+              label="New Password"
+              type="password"
+              fullWidth
+              size="small"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              sx={{ mb: 1 }}
+            />
+            <PasswordSubmitButton
+              onClick={handlePasswordUpdate}
+              variant="contained"
+              size="small"
+            >
+              Submit
+            </PasswordSubmitButton>
+          </PasswordInputContainer>
+        )}
+        {passwordMessage && (
+          <Typography
+            sx={{ mt: 1 }}
+            color={passwordMessage.includes("success") ? "success" : "error"}
+          >
+            {passwordMessage}
+          </Typography>
+        )}
+      </PasswordUpdateContainer>
+
       <SearchBar
         label="Search by name or address..."
         variant="outlined"
@@ -166,63 +347,66 @@ function UserDashboard() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* Error Message */}
-      {error && <Typography color="error">{error}</Typography>}
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
-      <Typography variant="h6" sx={{ marginBottom: "15px", color: "#1976D2" }}>
+      <Typography
+        variant="h6"
+        sx={{ marginBottom: "1rem", color: "#1976D2", fontWeight: "bold" }}
+      >
         Available Stores
       </Typography>
 
-      <StyledList>
+      <StoreListContainer>
         {filteredStores.length > 0 ? (
           filteredStores.map((store) => (
-            <StyledListItem key={store.id}>
-              {/* Store Name & Address */}
-              <ListItemText
-                primary={
-                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                    {store.name}
+            <StoreListItem key={store.id}>
+              <StoreInfo primary={store.name} secondary={store.address} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <RatingBox>
+                  <RatingText>⭐ {ratings[store.id]}</RatingText>
+                </RatingBox>
+                <FormControl size="small">
+                  <RatingSelect
+                    value={
+                      userRatings[store.id] !== undefined
+                        ? userRatings[store.id]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handleRatingSubmit(store.id, parseInt(e.target.value))
+                    }
+                    displayEmpty
+                  >
+                    <MenuItemStyled value="">
+                      {userRatings[store.id] !== undefined
+                        ? "Modify Rating"
+                        : "Rate"}
+                    </MenuItemStyled>
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <MenuItemStyled key={num} value={num}>
+                        {num}
+                      </MenuItemStyled>
+                    ))}
+                  </RatingSelect>
+                </FormControl>
+                {userRatings[store.id] !== undefined && (
+                  <Typography variant="body2" color="textSecondary">
+                    Your Rating: {userRatings[store.id]}
                   </Typography>
-                }
-                secondary={
-                  <Typography variant="body2" sx={{ color: "gray" }}>
-                    {store.address}
-                  </Typography>
-                }
-              />
-
-              {/* Average Rating */}
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                  ⭐ {ratings[store.id]}
-                </Typography>
+                )}
               </Box>
-
-              {/* Rating Input Dropdown */}
-              <FormControl size="small">
-                <StyledSelect
-                  value={userRatings[store.id] || ""}
-                  onChange={(e) =>
-                    handleRatingSubmit(store.id, parseInt(e.target.value))
-                  }
-                  displayEmpty
-                >
-                  <MenuItem value="">Rate</MenuItem>
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <MenuItem key={num} value={num}>
-                      {num}
-                    </MenuItem>
-                  ))}
-                </StyledSelect>
-              </FormControl>
-            </StyledListItem>
+            </StoreListItem>
           ))
         ) : (
           <Typography variant="body1" sx={{ textAlign: "center", p: 2 }}>
             No stores found.
           </Typography>
         )}
-      </StyledList>
+      </StoreListContainer>
     </StyledPaper>
   );
 }

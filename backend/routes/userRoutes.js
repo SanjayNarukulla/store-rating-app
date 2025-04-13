@@ -17,34 +17,29 @@ router.get("/", authenticateUser, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { search = "", role = "" } = req.query;
-    let query = "SELECT id, name, email, address, role FROM users";
-    const values = [];
-    const conditions = [];
+    const query = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.address,
+        u.role,
+        ROUND(AVG(r.rating), 1) AS average_store_rating
+      FROM users u
+      LEFT JOIN stores s ON s.owner_id = u.id
+      LEFT JOIN ratings r ON r.store_id = s.id
+      GROUP BY u.id, u.name, u.email, u.address, u.role
+    `;
 
-    if (search.trim() !== "") {
-      values.push(`%${search}%`);
-      conditions.push(
-        `(LOWER(name) LIKE $${values.length} OR LOWER(email) LIKE $${values.length})`
-      );
-    }
-
-    if (role.trim() !== "") {
-      values.push(role);
-      conditions.push(`role = $${values.length}`);
-    }
-
-    if (conditions.length > 0) {
-      query += " WHERE " + conditions.join(" AND ");
-    }
-
-    const result = await pool.query(query, values);
+    const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 /**
  * @route   GET /api/users/:id
@@ -143,5 +138,46 @@ router.post(
     }
   }
 );
+
+
+router.put("/update-password", authenticateUser, async (req, res) => {
+  const userId = req.user.id;
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    // Fetch user from DB
+    const userResult = await pool.query(
+      "SELECT password FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userResult.rows[0];
+
+    // Compare old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update in DB
+    await pool.query("UPDATE users SET password = $1 WHERE id = $2", [
+      hashedPassword,
+      userId,
+    ]);
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Password update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 module.exports = router;

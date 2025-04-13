@@ -53,7 +53,10 @@ const StoreList = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      
       setAllStores(response.data);
+      console.log(response.data)
+      
     } catch (err) {
       setError("Error fetching stores. Please try again later.");
     } finally {
@@ -88,7 +91,6 @@ const StoreList = () => {
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
   };
-
   return (
     <Paper sx={{ padding: 3, marginTop: 2, backgroundColor: "#F5F5F5" }}>
       <TextField
@@ -117,6 +119,7 @@ const StoreList = () => {
                 <TableCell>Email</TableCell>
                 <TableCell>Address</TableCell>
                 <TableCell>Owner ID</TableCell>
+                <TableCell>Average Rating</TableCell> {/* New Column */}
               </TableRow>
             </StyledTableHead>
             <TableBody>
@@ -127,6 +130,11 @@ const StoreList = () => {
                   <TableCell>{store.email}</TableCell>
                   <TableCell>{store.address || "N/A"}</TableCell>
                   <TableCell>{store.owner_id}</TableCell>
+                  <TableCell>
+                    {store.average_rating !== null
+                      ? `${parseFloat(store.average_rating).toFixed(1)} ⭐`
+                      : "N/A"}
+                  </TableCell>
                 </StyledTableRow>
               ))}
             </TableBody>

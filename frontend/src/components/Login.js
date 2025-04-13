@@ -25,10 +25,20 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!validateEmail(formData.email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await axios.post(`${API_URL}/auth/login`, formData, {
@@ -80,6 +90,13 @@ function Login() {
             onChange={handleChange}
             value={formData.email}
             required
+            helperText={
+              formData.email &&
+              !validateEmail(formData.email) &&
+              "Invalid email format"
+            }
+            error={formData.email && !validateEmail(formData.email)}
+            sx={{ mb: 2 }}
           />
           <TextField
             type="password"
@@ -90,6 +107,7 @@ function Login() {
             onChange={handleChange}
             value={formData.password}
             required
+            sx={{ mb: 2 }}
           />
           <Button
             type="submit"

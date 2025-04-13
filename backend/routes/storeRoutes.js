@@ -7,12 +7,23 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const stores = await pool.query(`SELECT * FROM stores`);
+    const query = `
+      SELECT 
+        s.*, 
+        ROUND(AVG(r.rating), 1) AS average_rating
+      FROM stores s
+      LEFT JOIN ratings r ON s.id = r.store_id
+      GROUP BY s.id
+      ORDER BY s.id;
+    `;
+
+    const stores = await pool.query(query);
     res.json(stores.rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 router.post(
   "/",
