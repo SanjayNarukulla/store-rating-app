@@ -1,6 +1,6 @@
-credentials for Admin;
-narukullasanjay@gmail.com
-sanjay123
+# Credentials for Admin access;
+email : narukullasanjay@gmail.com,
+password : sanjay123
 
 #   Store Rating and Management System
 
